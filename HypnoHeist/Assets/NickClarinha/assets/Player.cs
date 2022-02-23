@@ -19,6 +19,7 @@ public class Player : MonoBehaviour
     private bool isSlope;
     [SerializeField]  private LayerMask whatIsGround;
     
+    
     private void Start()
     {
         cc = GetComponent<CircleCollider2D>();
