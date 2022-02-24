@@ -69,7 +69,7 @@ public class GuardaBehaviors : MonoBehaviour {
         var hit = Physics2D.Raycast(transform.position, dir, 30, playerLayer);
         if (hit) {
             if (hit.collider.CompareTag("Player")) {
-                print( name + " sees player");
+                print( name + " see player");
             }
         }
         
