@@ -6,6 +6,9 @@ public class Player : MonoBehaviour
 {
     public Rigidbody2D rb;
     public BoxCollider2D col;
+    public Transform GroundChechCollider;
+    public LayerMask GroundLayer;
+    public bool inFly = true;
     public float Speed;
     private float SlopeDownOld;
     public bool isGrounded;
@@ -13,6 +16,7 @@ public class Player : MonoBehaviour
     private Vector2 move;
     private Vector2 ColliderSize;
     private float DownAngle;
+    private float SloepSideAngle;
     private Vector2 NormalPerp;
     [SerializeField] private float CheckDistance;
     public bool hidden = false;
@@ -30,10 +34,26 @@ public class Player : MonoBehaviour
     {
         Vector2 CheckPos = transform.position - new Vector3(0.0f, ColliderSize.y/2);
         CheckVertical(CheckPos);
+        CheckHorizontal(CheckPos);
     }
     private void CheckHorizontal(Vector2 CheckPos)
     {
+        RaycastHit2D hitFront = Physics2D.Raycast(CheckPos, transform.right, CheckDistance, whatIsGround);
+        RaycastHit2D hitBack = Physics2D.Raycast(CheckPos, -transform.right, CheckDistance, whatIsGround);
 
+        if(hitFront)
+        {
+            isSlope = true;
+            SloepSideAngle = Vector2.Angle(hitFront.normal, Vector2.up);
+        }else if (hitBack)
+        {
+            isSlope = true;
+            SloepSideAngle = Vector2.Angle(hitBack.normal, Vector2.up);
+        }else
+        {
+            SloepSideAngle = 0.0f;
+            isSlope = false;
+        }
     }
     private void CheckVertical(Vector2 CheckPos)
     {
@@ -72,6 +92,14 @@ public class Player : MonoBehaviour
     {
         rb.MovePosition(rb.position+move*Speed*Time.fixedDeltaTime);
         SlopeCheck();
+        GroundChech();
+        if (inFly == true){rb.AddForce(Vector2.down*500);}
     }
    
+   void GroundChech()
+   {
+       inFly = true;
+       Collider2D[] collider = Physics2D.OverlapCircleAll(GroundChechCollider.position,0.2f,GroundLayer);
+       if(collider.Length > 0){inFly = false;}
+   }
 }

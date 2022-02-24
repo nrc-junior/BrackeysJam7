@@ -5,6 +5,7 @@ using UnityEngine;
 public class allow : MonoBehaviour
 {
     public GameObject ob;
+    public BoxCollider2D col;
     void Start()
     {
         
@@ -16,6 +17,13 @@ public class allow : MonoBehaviour
         if(Input.GetKey("up"))
         {
             ob.GetComponent<PolygonCollider2D>().enabled = true;
-        }else{ob.GetComponent<PolygonCollider2D>().enabled = false;}
+        }else if(Input.GetKey("down")){ob.GetComponent<PolygonCollider2D>().enabled = false;}
     }
+   private void OnCollisionEnter2D(Collision2D other) {
+       if(other.collider.tag == "Ground")
+       {
+           ob.GetComponent<PolygonCollider2D>().enabled = false;
+            Debug.Log("bateu");
+       }
+   }
 }
