@@ -102,4 +102,11 @@ public class Player : MonoBehaviour
        Collider2D[] collider = Physics2D.OverlapCircleAll(GroundChechCollider.position,0.2f,GroundLayer);
        if(collider.Length > 0){inFly = false;}
    }
+    private void OnCollisionEnter2D(Collision2D other) {
+       if(other.collider.tag == "Ground")
+       {
+            col.isTrigger = true;
+       }
+       if(other.collider.tag == "Stairs"){col.isTrigger = false;}
+   }
 }

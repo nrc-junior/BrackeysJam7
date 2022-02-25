@@ -18,12 +18,6 @@ public class allow : MonoBehaviour
         {
             ob.GetComponent<PolygonCollider2D>().enabled = true;
         }else if(Input.GetKey("down")){ob.GetComponent<PolygonCollider2D>().enabled = false;}
+        if(col.GetComponent<Collider>() == true){ob.GetComponent<PolygonCollider2D>().enabled = false;}
     }
-   private void OnCollisionEnter2D(Collision2D other) {
-       if(other.collider.tag == "Ground")
-       {
-           ob.GetComponent<PolygonCollider2D>().enabled = false;
-            Debug.Log("bateu");
-       }
-   }
 }
