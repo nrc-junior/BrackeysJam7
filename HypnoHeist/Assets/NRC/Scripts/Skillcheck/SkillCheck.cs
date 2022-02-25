@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public enum BubbleOwner {
   player,
@@ -50,9 +51,8 @@ public class SkillCheck : MonoBehaviour {
   private int benchIdx = 0;
   public InputField benchmarkTest;
   
-  
   [SerializeField] private Slider score;
-
+  [SerializeField] GameObject[] tutorial;
   private void Awake() {
     var resolution = Screen.currentResolution;
     windowRes = new Vector2(resolution.width, resolution.height);
@@ -73,8 +73,17 @@ public class SkillCheck : MonoBehaviour {
     int bubbleCount = waves[roundIndex <= 2 ? roundIndex : 2];
     playerPops = bubbleCount;
     enemyPops = bubbleCount;
+    
+    if (!PlayerData.madeTutorial) {
+      PlayerData.savedRng = (int)Random.value;
+      Random.InitState(PlayerData.defaultRng);
+      Time.timeScale = 0f;
+      foreach (var o in tutorial) {
+        o.SetActive(true);
+      }
+    }
+    
     BeginRound(bubbleCount);
-    Time.timeScale = .1f;
   }
 
   public void BeginRound(int count) {
@@ -113,8 +122,17 @@ public class SkillCheck : MonoBehaviour {
     if (side == BubbleOwner.player) {
       benchTimes[++benchIdx] = Time.time;
 
-      if (--playerPops == 0 && Playing) {
-        print("player wins");
+      if (--playerPops == 0 && Playing) { // PLAYER Wins 
+        if (!PlayerData.madeTutorial) {
+          PlayerData.madeTutorial = true;
+          Random.InitState(PlayerData.savedRng);
+          Time.timeScale = 1f;
+          
+          foreach (var o in tutorial) {
+            o.SetActive(false);
+          }
+        }
+        
         Playing = false;
         float sum = 0;
         for (int i = 0; i < benchTimes.Length-1; i++) {
@@ -124,8 +142,8 @@ public class SkillCheck : MonoBehaviour {
         
         StartCoroutine(Attack(BubbleOwner.player)); // Attack and VFX 
       }
-    } else if (--enemyPops == 0 && Playing) {
-      print("bot wins");
+    } else if (--enemyPops == 0 && Playing) { // bot wins
+      
         Playing = false;
         StartCoroutine(Attack(BubbleOwner.bot)); // Attack and VFX 
     }
@@ -159,20 +177,22 @@ public class SkillCheck : MonoBehaviour {
         i.IncreaseParticles(0);
       }
     }
+
+    yield return new WaitForSeconds(1);
+    
+    foreach (var i in bubbles) {
+      i.RemoveBubble();
+    } 
+    yield return new WaitForSeconds(2);
     
     if (score.value >= score.maxValue || score.value <= score.minValue ) {
       ended();
     } else {
       RoundEnded();
-        
     }
   }
 
   void RoundEnded() {
-    foreach (var _bubble in bubbles) {
-      _bubble.RemoveBubble();
-    }
-    
     int bubbleCount = waves[roundIndex <= 2 ? roundIndex : 2];
     playerPops = bubbleCount;
     enemyPops = bubbleCount;
@@ -180,9 +200,6 @@ public class SkillCheck : MonoBehaviour {
   }
 
   void ended() {
-    foreach (var _bubble in bubbles) {
-      _bubble.RemoveBubble();
-    }
 
     bool win = score.value >= score.maxValue;    
     round.text = win ? "Vigilante Hypnotized" : "you loose";

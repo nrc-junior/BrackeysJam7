@@ -64,11 +64,13 @@ public class BubbleElement : MonoBehaviour {
     public void Attack() {
         duringAttack = false;
         lineEffect = Instantiate(SkillCheck._AttackEffect, uiBox.parent);
-        lineEffect.GetComponent<Image>().color = col;
+        Image img;
+        (img = lineEffect.GetComponent<Image>()).color = col;
         lineEffect.localPosition = (uiBox.localPosition + target.localPosition) / 2;
         Vector3 dif = target.localPosition - uiBox.localPosition;
         lineEffect.sizeDelta = new Vector3(dif.magnitude - uiBox.sizeDelta.x / 2, effectHeight);
         lineEffect.rotation = Quaternion.Euler(new Vector3(0, 0, 180 * Mathf.Atan(dif.y / dif.x) / Mathf.PI));
+        StartCoroutine(FadeElement(img,.4f));
     }
 
     bool IsOverBubble() {
@@ -106,12 +108,24 @@ public class BubbleElement : MonoBehaviour {
         particlesEmission.rateOverTime = count;
     }
 
+    IEnumerator FadeElement(Image img, float wait = 0, bool destroy = false) {
+        yield return new WaitForSeconds(wait);
+        var color = img.color;
+        
+        while (color.a > 0) {
+            color.a -= 0.01f;
+            img.color = color;
+            yield return new WaitForSeconds(.01f);
+        }
+
+        if (destroy) Destroy(img.gameObject);
+    }
+    
     public void RemoveBubble() {
         
         if(lineEffect != null)Destroy(lineEffect.gameObject);
-        if(uiBox != null)Destroy(uiBox.gameObject);
+        if(uiBox != null) StartCoroutine(FadeElement(image, 0,true));
         if(particles != null)Destroy(particles.gameObject);
 
-        Destroy(this);
     }
 }
