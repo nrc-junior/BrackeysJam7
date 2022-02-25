@@ -135,7 +135,7 @@ public class GuardaBehaviors : MonoBehaviour {
         
         yield return new WaitUntil(() => InPosition());
         yield return new WaitForSeconds(0.3f);
-        print(name +" sync with "+ waitingFor.guarda.name);
+
         duringSync = false;
         patroling = true;
         waitingFor = null;
