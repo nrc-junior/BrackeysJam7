@@ -8,4 +8,5 @@ public class PlayerData : MonoBehaviour {
     public static int savedRng ;
 
     static public Collider2D[] playerCols;
+    static public PlayerBehaviours pb;
 }

@@ -45,6 +45,7 @@ public class Movement : MonoBehaviour {
         }
         
         if (isPlayer) {
+            PlayerData.pb = GetComponent<PlayerBehaviours>();
             PlayerData.playerCols = new Collider2D[2];
             PlayerData.playerCols[0] = col;
             PlayerData.playerCols[1] = cc;
@@ -53,21 +54,22 @@ public class Movement : MonoBehaviour {
     }
 
     public bool climbing;
-    
-    void Update() {
-
+    void FixedUpdate() {
         if (isPlayer) {
             Vector2 dir = new Vector2(Input.GetAxisRaw("Horizontal"),0);
             move = new Vector2(dir.x,dir.y);
             climbing = Input.GetAxis("Vertical") > 0;
         } 
+       
+        SlopeCheck();
+        GroundCheck();
         
         if (move.x > 0 && !m_FacingRight) { // NRC: flip flop por size.
             Flip();
         } else if (move.x < 0 && m_FacingRight) {
             Flip();
         }
-        
+
         if (isGrounded && !isSlope) {
             move.Set(Speed*move.x,0.0f);
             rb.velocity = move;
@@ -80,19 +82,13 @@ public class Movement : MonoBehaviour {
             move.Set(Speed*move.x, rb.velocity.y);
             rb.velocity = move;
         }
-
         
-    }
-    
-    void FixedUpdate() {
         rb.MovePosition(rb.position+move*Speed*Time.fixedDeltaTime);
-        SlopeCheck();
-        GroundCheck();
+        move = Vector2.zero;
         
         if (inFly) {
             rb.AddForce(Vector2.down*500);
         }
-        move = Vector2.zero;
     }
 
     public void SetMove(Vector2 dir) {
