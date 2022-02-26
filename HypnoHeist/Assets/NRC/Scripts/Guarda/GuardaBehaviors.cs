@@ -14,7 +14,7 @@ public class SyncPath {
 public class GuardaBehaviors : MonoBehaviour {
     private CircleCollider2D legsCol;
     private BoxCollider2D torsoCol;
-    private Controller control;
+    private Movement control;
     
     public List<Vector2> patrolPoints = new List<Vector2>();
 
@@ -33,9 +33,9 @@ public class GuardaBehaviors : MonoBehaviour {
     
     // Detection
     const int playerLayer = 1 << 3;
-    
+    private bool climbing;
     void Awake() {
-        control = GetComponent<Controller>();
+        control = GetComponent<Movement>();
         torsoCol = GetComponent<BoxCollider2D>();
         legsCol = GetComponent<CircleCollider2D>();
     }
@@ -43,6 +43,13 @@ public class GuardaBehaviors : MonoBehaviour {
     private void Start() {
         GuardaBehaviors[] guardas = FindObjectsOfType<GuardaBehaviors>();
 
+        foreach (var col in PlayerData.playerCols) {
+            Physics2D.IgnoreCollision(col, legsCol);
+            Physics2D.IgnoreCollision(col, torsoCol);
+            Physics2D.IgnoreCollision(legsCol, col);
+            Physics2D.IgnoreCollision(torsoCol, col);
+        }
+        
         foreach (var guarda in guardas) {
             Physics2D.IgnoreCollision(guarda.legsCol, legsCol);
             Physics2D.IgnoreCollision(guarda.legsCol, torsoCol);
@@ -54,6 +61,7 @@ public class GuardaBehaviors : MonoBehaviour {
         if (patrolPoints.Count > 1) {
             transform.position =  patrolPoints[startPatrolIndex];
             pathIndex = startPatrolIndex;
+            patrolTarget = patrolPoints[startPatrolIndex];
             patroling = true;
             if (startPatrolIndex + 1 > patrolPoints.Count - 1) {
                 print("start tracing back");
@@ -76,7 +84,7 @@ public class GuardaBehaviors : MonoBehaviour {
         if (!patroling) return;
         Vector2 pos = transform.position;
         
-        control.Move(Mathf.Sign(patrolTarget.x - pos.x ));
+        control.SetMove(new Vector2(Mathf.Sign(patrolTarget.x - pos.x ), climbing ? 1 : 0 ));
 
         if(Vector2.Distance(pos, patrolTarget) < 1) {
             reachedPoint = true;
@@ -90,8 +98,12 @@ public class GuardaBehaviors : MonoBehaviour {
 
     private void CalculateNextPatrolPoint() {
         if (patrolPoints.Count <= 1) return;
+            
         pathIndex = inversePatrolling ? pathIndex - 1 : pathIndex + 1;
+        climbing = patrolPoints[pathIndex].y > patrolTarget.y && Mathf.Abs(patrolTarget.y - patrolPoints[pathIndex].y) > 2.9f; 
+        Mathf.Abs(patrolTarget.y - patrolPoints[pathIndex].y);
         patrolTarget = patrolPoints[pathIndex];
+        
         
         if(duringSync) return;
         reachedPoint = false;
