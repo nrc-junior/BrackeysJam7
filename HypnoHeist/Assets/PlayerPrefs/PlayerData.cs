@@ -6,4 +6,6 @@ public class PlayerData : MonoBehaviour {
     public static bool madeTutorial;
     public static int defaultRng = 42;
     public static int savedRng ;
+
+    static public Collider2D[] playerCols;
 }
