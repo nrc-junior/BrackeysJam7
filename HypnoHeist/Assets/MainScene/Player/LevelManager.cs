@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class LevelManager : MonoBehaviour {
-    private static int currentLevel;
+    public static int currentLevel;
 
     private void Awake() {
         currentLevel = SceneManager.GetActiveScene().buildIndex;
@@ -20,6 +20,7 @@ public class LevelManager : MonoBehaviour {
 
     public static void Restart() {
         PlayerData.playTimes = 0;
+        PauseMenu.Resume();
         SceneManager.LoadScene(currentLevel);
     }
 }

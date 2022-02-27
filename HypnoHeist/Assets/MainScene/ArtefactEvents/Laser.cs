@@ -9,7 +9,7 @@ public class Laser : MonoBehaviour {
 
  private void Start() {
   laserBeam.SetActive(status);
-  GetComponent<Animator>().Play(status ? "LaserOn":"LaserOff");
+  GetComponentInChildren<Animator>().Play(status ? "LaserOn":"LaserOff");
   GetComponent<Collider2D>().enabled = status;
  }
 
@@ -17,7 +17,7 @@ public class Laser : MonoBehaviour {
   status = !status;
   laserBeam.SetActive(status);
   GetComponent<Collider2D>().enabled = status;
-  GetComponent<Animator>().Play(status ? "LaserOn":"LaserOff");
+  GetComponentInChildren<Animator>().Play(status ? "LaserOn":"LaserOff");
  }
  
 }

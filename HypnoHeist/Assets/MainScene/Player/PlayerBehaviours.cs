@@ -85,6 +85,16 @@ public class PlayerBehaviours : MonoBehaviour {
         StartCoroutine(RestartLevel());
     }
 
+    public void Credits(){
+        DarkScreen.Play(Animations.credits);
+        StartCoroutine(End());
+    }
+
+    IEnumerator End() {
+        yield return new WaitForSeconds(18);
+        Application.Quit();
+    }
+    
     IEnumerator RestartLevel() {
         yield return new WaitForSeconds(2);
         LevelManager.Restart();

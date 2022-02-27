@@ -40,15 +40,17 @@ public class GuardaBehaviors : MonoBehaviour {
 
     //hypnosis
     public bool hypnotized;
-    
-    bool stunned;
+
+    public bool stunned;
     float stunnedCD;
     
-    void Awake() {
+    void Awake()
+    {
         control = GetComponent<Movement>();
         torsoCol = GetComponent<BoxCollider2D>();
         legsCol = GetComponent<CircleCollider2D>();
     }
+    
 
     private void Start() {
         GuardaBehaviors[] guardas = FindObjectsOfType<GuardaBehaviors>();
@@ -192,7 +194,9 @@ public class GuardaBehaviors : MonoBehaviour {
         };
     }
 
-    public void Stun() {
+    public void Stun()
+    {
+        GetComponent<Movement>().isStuned();
         stunnedCD = 3;
         stunned = true;
     }

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 
 public class Movement : MonoBehaviour {
@@ -18,7 +19,7 @@ public class Movement : MonoBehaviour {
 
     private CircleCollider2D cc;
     
-
+    
     private bool isSlope;
     private Vector2 colliderSize;
     private float downAngle;
@@ -37,10 +38,16 @@ public class Movement : MonoBehaviour {
     public delegate void CleanBehaviours();
     public static event CleanBehaviours PlayerBehaviours;
 
+    bool stun = false;
+
     // hypnosis 
     bool iAmTarget = false;
+
+    private Animator animator;
     
     private void Awake() {
+        animator = GetComponent<Animator>();
+        
         isPlayer = CompareTag("Player");
         rb = GetComponent<Rigidbody2D>();
         col = GetComponent<BoxCollider2D>();
@@ -66,6 +73,9 @@ public class Movement : MonoBehaviour {
     
     
     void FixedUpdate() {
+        if (stun) {
+            return;
+        }
         
         if (isPlayer) {
             if (pb.inMinigame) return;
@@ -74,8 +84,16 @@ public class Movement : MonoBehaviour {
             Vector2 dir = new Vector2(Input.GetAxisRaw("Horizontal"),0);
             move = new Vector2(dir.x,dir.y);
             climbing = Input.GetAxis("Vertical") > 0;
-        } 
+        }
+        
+        
+        
+        if (move.x == 0){
+            animator.Play("Idle");
+        } else if (move.x != 0) { animator.Play("WalkCycle"); }
+        
        
+        
         SlopeCheck();
         GroundCheck();
         
@@ -143,6 +161,18 @@ public class Movement : MonoBehaviour {
             isSlope = false;
         }
     }
+    public void isStuned() {
+        stun = true;
+        StartCoroutine(Stunned());
+    }
+
+    IEnumerator Stunned() {
+        var behaviors = GetComponent<GuardaBehaviors>();
+        animator.Play("Stun");
+        yield return new WaitUntil(() => !behaviors.stunned);
+        stun = false;
+    }
+    
     
     private void CheckVertical(Vector2 CheckPos) {
         RaycastHit2D hit = Physics2D.Raycast(CheckPos, Vector2.down,checkDistance,whatIsGround);

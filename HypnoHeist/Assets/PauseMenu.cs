@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,29 +8,36 @@ public class PauseMenu : MonoBehaviour
 {
     public static bool isPaused = false;
     public GameObject go;
+    public static GameObject _go;
     // Update is called once per frame
-    void Update()
-    {
-        if(Input.GetKeyDown(KeyCode.Escape))
-        {
-            if(isPaused)
-            {
+
+    private void Awake() {
+        go.SetActive(isPaused);
+        _go = go;
+    }
+
+    void Update() {
+    
+        
+        if(Input.GetKeyDown(KeyCode.Escape)) {
+            if(isPaused) {
                 Resume();
             }else {Pause();}
         }
     }
-    public void Resume()
+    public static void Resume()
     {
-        go.SetActive(false);
+        _go.SetActive(false);
         Time.timeScale = 1f;
         isPaused = false;
     }
     void Pause()
     {
-        go.SetActive(true);
-        Time.timeScale = 0.0f;
+        _go.SetActive(true);
+        if (!PlayerData.pb.inMinigame) {
+            Time.timeScale = 0.0f;
+        }
         isPaused = true;
     }
-    public void Load(){SceneManager.LoadScene("Menu");}
     public void Quit(){Application.Quit();}
 }

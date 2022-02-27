@@ -6,6 +6,8 @@ public enum  Animations {
     fadeIn,
     fadeOut,
     death,
+    credits,
+    intro,
 }
 
 public class DarkScreen : MonoBehaviour {
@@ -16,7 +18,23 @@ public class DarkScreen : MonoBehaviour {
         clips[Animations.fadeIn] = "DarkScreenIn";
         clips[Animations.fadeOut] = "DarkScreenOut";
         clips[Animations.death] = "DeathScreen";
+        clips[Animations.credits] = "Credits";
+        clips[Animations.intro] = "Intro";
+
+        if (!PlayerData.playIntro) {
+            PlayerData.playIntro = true;
+            StartCoroutine(Intro());
+            return;
+        }
         
+        Play(Animations.fadeOut);
+        
+    }
+
+    IEnumerator Intro() {
+        Play(Animations.intro);
+        yield return new WaitForSeconds(30);
+        Play(Animations.fadeOut);
     }
 
     public static void Play(Animations clip) {

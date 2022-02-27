@@ -30,7 +30,7 @@ public class BubbleElement : MonoBehaviour {
         
         this.target = target;
         this.particles = particles;
-        this.particles.transform.localPosition = uiBox.localPosition; //- new Vector3(202, 128);
+        this.particles.transform.localPosition = uiBox.localPosition - (PlayerData.madeTutorial ? Vector3.zero :  new Vector3(202, 128));
         side = owner;
         var particlesMain = this.particles.main;
         this.col = col;
