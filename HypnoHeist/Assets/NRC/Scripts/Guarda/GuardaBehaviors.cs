@@ -17,7 +17,9 @@ public class GuardaBehaviors : MonoBehaviour {
     private Movement control;
     
     public List<Vector2> patrolPoints = new List<Vector2>();
-
+    public float watchTime = 1;
+    
+    
     public int startPatrolIndex = 0;
     private bool patroling;
     private bool inversePatrolling;
@@ -33,7 +35,15 @@ public class GuardaBehaviors : MonoBehaviour {
     
     // Detection
     const int playerLayer = 1 << 3;
+    private PlayerBehaviours pb;
     private bool climbing;
+
+    //hypnosis
+    public bool hypnotized;
+    
+    bool stunned;
+    float stunnedCD;
+    
     void Awake() {
         control = GetComponent<Movement>();
         torsoCol = GetComponent<BoxCollider2D>();
@@ -42,7 +52,8 @@ public class GuardaBehaviors : MonoBehaviour {
 
     private void Start() {
         GuardaBehaviors[] guardas = FindObjectsOfType<GuardaBehaviors>();
-
+        pb = PlayerData.pb;
+        
         foreach (var col in PlayerData.playerCols) {
             Physics2D.IgnoreCollision(col, legsCol);
             Physics2D.IgnoreCollision(col, torsoCol);
@@ -64,6 +75,7 @@ public class GuardaBehaviors : MonoBehaviour {
             patrolTarget = patrolPoints[startPatrolIndex];
             patroling = true;
             if (startPatrolIndex + 1 > patrolPoints.Count - 1) {
+                
                 print("start tracing back");
                 inversePatrolling = true;
             };
@@ -73,15 +85,32 @@ public class GuardaBehaviors : MonoBehaviour {
     }
 
     private void FixedUpdate() {
+        if(hypnotized) return;
+        
+        if (stunned) {
+            if(pb.inMinigame) return;
+            
+            if (stunnedCD > 0) {
+                stunnedCD -= Time.fixedDeltaTime;
+                return;
+            } 
+
+            stunned = false;
+            return;
+        }
+        
         Vector2 dir = control.m_FacingRight ? transform.right : -transform.right ;
         var hit = Physics2D.Raycast(transform.position, dir, 30, playerLayer);
         if (hit) {
             if (hit.collider.CompareTag("Player")) {
-                print( name + " see player");
-            }
-        }
+                if (!pb.isHide) {
+                    DuringMinigame();
+                    patroling = false;
+                } else patroling = true;
+            } else patroling = true;
+        } else patroling = true;
         
-        if (!patroling) return;
+        if (!patroling || patrolPoints.Count <= 1 || pb.inMinigame || waitingSync) return;
         Vector2 pos = transform.position;
         
         control.SetMove(new Vector2(Mathf.Sign(patrolTarget.x - pos.x ), climbing ? 1 : 0 ));
@@ -91,19 +120,17 @@ public class GuardaBehaviors : MonoBehaviour {
             if (CanCyclePatrol()) {
                 if(duringSync) return;
                 CalculateNextPatrolPoint();
-                
             }
         }        
     }
 
     private void CalculateNextPatrolPoint() {
         if (patrolPoints.Count <= 1) return;
-            
+        
         pathIndex = inversePatrolling ? pathIndex - 1 : pathIndex + 1;
         climbing = patrolPoints[pathIndex].y > patrolTarget.y && Mathf.Abs(patrolTarget.y - patrolPoints[pathIndex].y) > 2.9f; 
         Mathf.Abs(patrolTarget.y - patrolPoints[pathIndex].y);
         patrolTarget = patrolPoints[pathIndex];
-        
         
         if(duringSync) return;
         reachedPoint = false;
@@ -137,20 +164,38 @@ public class GuardaBehaviors : MonoBehaviour {
 
 
     bool InPosition() {
-        return waitingFor.guarda.pathIndex == waitingFor.guardaReachPoint && waitingFor.guarda.reachedPoint;
+        return (waitingFor.guarda.pathIndex == waitingFor.guardaReachPoint && waitingFor.guarda.reachedPoint) || waitingFor.guarda.hypnotized || waitingFor.guarda.duringSync;
     }
 
+    private bool waitingSync;
     IEnumerator AwaitGuardaReach() {
         duringSync = true;
         yield return new WaitUntil(() => reachedPoint);
         patroling = false;
+        waitingSync = true;
         
         yield return new WaitUntil(() => InPosition());
         yield return new WaitForSeconds(0.3f);
-
+        yield return new WaitForSeconds(watchTime);
+        
         duringSync = false;
+        waitingSync = false;
         patroling = true;
         waitingFor = null;
         CalculateNextPatrolPoint();
     }
+
+    void DuringMinigame() {
+        if (!pb.inMinigame) {
+            pb.inMinigame = true;
+            pb.StartMinigame(this);
+        };
+    }
+
+    public void Stun() {
+        stunnedCD = 3;
+        stunned = true;
+    }
+
+    
 }

@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
-public enum BubbleOwner {
+public enum Sides {
   player,
   bot
 }
@@ -59,9 +59,10 @@ public class SkillCheck : MonoBehaviour {
     GetComponent<CanvasScaler>().referenceResolution = windowRes;
   }
 
-  private void Start() {
+  public void StartMinigame() {
     _ = this;
-    
+
+    GetComponent<Animator>().Play("MinigameFadeIn");    
     _AttackEffect = attackLine;
   
     l_canvasWidth = new Vector2(left.anchorMin.x, left.anchorMax.x);
@@ -77,13 +78,26 @@ public class SkillCheck : MonoBehaviour {
     if (!PlayerData.madeTutorial) {
       PlayerData.savedRng = (int)Random.value;
       Random.InitState(PlayerData.defaultRng);
-      Time.timeScale = 0f;
-      foreach (var o in tutorial) {
-        o.SetActive(true);
-      }
+      StartCoroutine(ShowTutorial());
     }
     
     BeginRound(bubbleCount);
+  }
+
+  IEnumerator ShowTutorial() {
+    yield return new WaitForSeconds(.6f);
+
+    while (Time.timeScale > 0.1f) {
+      if (Time.timeScale - 0.15f <= 0.1f) Time.timeScale = 0.0f;
+      
+      Time.timeScale -= 0.1f;
+      yield return new WaitForSecondsRealtime(0.01f);
+    }
+
+    foreach (var o in tutorial) {
+      o.SetActive(true);
+    }
+
   }
 
   public void BeginRound(int count) {
@@ -95,31 +109,31 @@ public class SkillCheck : MonoBehaviour {
     benchIdx = 0;
     
     for (int i = 0; i < count; i++) {
-      SpawnElement(BubbleOwner.player);
-      SpawnElement(BubbleOwner.bot);
+      SpawnElement(Sides.player);
+      SpawnElement(Sides.bot);
     }
 
     Playing = true;
     OnStart?.Invoke();
   }
   
-  void SpawnElement(BubbleOwner owner) {
+  void SpawnElement(Sides owner) {
     BubbleElement bubbleInstance = Instantiate(bubble, transform).GetComponent<BubbleElement>();
     
     bubbleInstance.Setup(
-      owner == BubbleOwner.player ? 
+      owner == Sides.player ? 
         l_canvasWidth : r_canvasWidth,
-      owner == BubbleOwner.player ?
+      owner == Sides.player ?
         l_CanvasHeight : r_CanvasHeight , windowRes, 
-      owner == BubbleOwner.player ? brainR : brainL,
+      owner == Sides.player ? brainR : brainL,
       Instantiate(particles, transform), owner,
-      owner == BubbleOwner.player ? ORANGE : PURPLE );
+      owner == Sides.player ? ORANGE : PURPLE );
     bubbles.Add(bubbleInstance);
   }
 
-  public void Popped(BubbleOwner side) {
+  public void Popped(Sides side) {
 
-    if (side == BubbleOwner.player) {
+    if (side == Sides.player) {
       benchTimes[++benchIdx] = Time.time;
 
       if (--playerPops == 0 && Playing) { // PLAYER Wins 
@@ -140,19 +154,19 @@ public class SkillCheck : MonoBehaviour {
         }
         // todo: sum / (benchTimes.Length-1) + "+" ; // player speed combo
         
-        StartCoroutine(Attack(BubbleOwner.player)); // Attack and VFX 
+        StartCoroutine(Attack(Sides.player)); // Attack and VFX 
       }
     } else if (--enemyPops == 0 && Playing) { // bot wins
       
         Playing = false;
-        StartCoroutine(Attack(BubbleOwner.bot)); // Attack and VFX 
+        StartCoroutine(Attack(Sides.bot)); // Attack and VFX 
     }
   }
 
   //VFX
   [HideInInspector] public bool duringAttack;
   
-  IEnumerator Attack(BubbleOwner side) {
+  IEnumerator Attack(Sides side) {
     
     foreach (var i in bubbles) {
       if(i.side == side)
@@ -172,8 +186,8 @@ public class SkillCheck : MonoBehaviour {
         i.Attack(); 
         yield return new WaitForSeconds(.2f);
         
-        float dmg = side == BubbleOwner.player ? .1f : -.1f; //damage
-        score.value += dmg;
+        float dmg = side == Sides.player ? .1f : -.1f; //damage
+        score.value += dmg * (roundIndex/2f);
         i.IncreaseParticles(0);
       }
     }
@@ -184,8 +198,9 @@ public class SkillCheck : MonoBehaviour {
       i.RemoveBubble();
     } 
     yield return new WaitForSeconds(2);
-    
     if (score.value >= score.maxValue || score.value <= score.minValue ) {
+      GetComponent<Animator>().Play("MinigameFadeOut");
+      yield return new WaitForSeconds(1);
       ended();
     } else {
       RoundEnded();
@@ -200,9 +215,16 @@ public class SkillCheck : MonoBehaviour {
   }
 
   void ended() {
-
     bool win = score.value >= score.maxValue;    
-    round.text = win ? "Vigilante Hypnotized" : "you loose";
+    
+    roundIndex = 0;
+    int bubbleCount = waves[roundIndex <= 2 ? roundIndex : 2];
+    playerPops = bubbleCount;
+    enemyPops = bubbleCount;
+    score.value = score.maxValue / 2;
+    PlayerData.pb.EndMiniGame(win ? Sides.player : Sides.bot);
+    
+    
   }
 
   /// 

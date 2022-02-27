@@ -1,10 +1,11 @@
 using System.Collections;
 using UnityEngine.EventSystems;
 using UnityEngine;
+using  UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class BubbleElement : MonoBehaviour {
-    [HideInInspector] public BubbleOwner side;
+    [HideInInspector] public Sides side;
     
     public float circleRadius = 50;
     public float effectHeight = 70;
@@ -20,7 +21,7 @@ public class BubbleElement : MonoBehaviour {
     private RectTransform lineEffect;
     private Color col;
     public void Setup(Vector2 canvasWidth, Vector2 canvasHeight, Vector2 windowRes, RectTransform target,
-        ParticleSystem particles, BubbleOwner owner, Color col) {
+        ParticleSystem particles, Sides owner, Color col) {
         uiBox = GetComponent<RectTransform>();
         image = uiBox.GetComponent<Image>();
         uiBox.anchoredPosition = new Vector2(Random.Range(canvasWidth.x, canvasWidth.y) * windowRes.x,
@@ -39,7 +40,7 @@ public class BubbleElement : MonoBehaviour {
     }
 
     private void Update() {
-        if(side == BubbleOwner.bot) return;
+        if(side == Sides.bot) return;
         if (wasTouched) return;
         if (!Input.GetMouseButtonDown(0) || !IsOverBubble()) return;
 

@@ -14,15 +14,16 @@ public class EnemyPops : MonoBehaviour {
     private List<BubbleElement> bubbles;
     IEnumerator popAll() {
         bubbles = new List<BubbleElement>(popManager.bubbles) ;
+        float difficulty = PlayerData.GetBotVel();
         while (popManager.Playing) {
-            yield return new WaitForSeconds(0.514f);
+            yield return new WaitForSeconds(difficulty);
             EnemyPop();
         }
     }
     
     public void EnemyPop() {
         foreach (var i in bubbles) {
-            if (i.side == BubbleOwner.bot) {
+            if (i.side == Sides.bot) {
                 i.Pop();
                 bubbles.Remove(i);
                 break;
