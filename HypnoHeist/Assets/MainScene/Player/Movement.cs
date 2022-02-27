@@ -26,10 +26,19 @@ public class Movement : MonoBehaviour {
     private float slopeSideAngle;
     
     private Vector2 move;
+    public bool climbing;
     private bool isPlayer;
+    private PlayerBehaviours pb;
     private Collider2D oldStair; // ultimo collider com tag "Stairs" que o player/bot pisou
 
+    public delegate void Turns();
+    public event Turns ParentTurn;
     
+    public delegate void CleanBehaviours();
+    public static event CleanBehaviours PlayerBehaviours;
+
+    // hypnosis 
+    bool iAmTarget = false;
     
     private void Awake() {
         isPlayer = CompareTag("Player");
@@ -45,7 +54,8 @@ public class Movement : MonoBehaviour {
         }
         
         if (isPlayer) {
-            PlayerData.pb = GetComponent<PlayerBehaviours>();
+            pb = GetComponent<PlayerBehaviours>();
+            PlayerData.pb = pb;
             PlayerData.playerCols = new Collider2D[2];
             PlayerData.playerCols[0] = col;
             PlayerData.playerCols[1] = cc;
@@ -53,9 +63,14 @@ public class Movement : MonoBehaviour {
         colliderSize = cc.offset;
     }
 
-    public bool climbing;
+    
+    
     void FixedUpdate() {
+        
         if (isPlayer) {
+            if (pb.inMinigame) return;
+            if (pb.hypnotizing && !iAmTarget) return;
+            
             Vector2 dir = new Vector2(Input.GetAxisRaw("Horizontal"),0);
             move = new Vector2(dir.x,dir.y);
             climbing = Input.GetAxis("Vertical") > 0;
@@ -102,6 +117,7 @@ public class Movement : MonoBehaviour {
         Vector3 theScale = transform.localScale;
         theScale.x *= -1;
         transform.localScale = theScale;
+        ParentTurn?.Invoke();
     }
     
     private void SlopeCheck()
@@ -157,7 +173,11 @@ public class Movement : MonoBehaviour {
             Debug.DrawRay(hit.point, hit.normal, Color.green);
         }
     }
-   
+
+    public void SetOldStair(Collider2D stair) {
+        oldStair = stair;
+    }
+    
    void GroundCheck() {
        inFly = true;
        Collider2D[] colliders = Physics2D.OverlapCircleAll(groundCheckCol.position,0.2f,whatIsGround);
@@ -184,4 +204,18 @@ public class Movement : MonoBehaviour {
        }
    }
 
+   public void Hypnotize(bool isIn) {
+       pb = isIn ? PlayerData.pb : null;
+       if (!isIn) {
+           PlayerData.pb.target = null;
+           PlayerData.pb.hypnotizing = false;
+           PlayerBehaviours?.Invoke();
+       }
+       
+       iAmTarget = isIn;
+       isPlayer = isIn;
+       tag = isIn ? "Player" : "NPC";
+       GetComponent<GuardaBehaviors>().hypnotized = isIn;
+       
+   }
 }

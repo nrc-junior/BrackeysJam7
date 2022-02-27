@@ -32,6 +32,7 @@ public class StairCheck : MonoBehaviour {
         if (col.CompareTag("Player") || col.CompareTag("NPC")) {
             if (walker == null) walker = col.GetComponent<Movement>();
             if (triggerDown) {
+                walker.SetOldStair(stair);
                 walker.IgnoreCollision(stair, false);
                 updated = true;
                 return;
